@@ -2,6 +2,8 @@ package com.example.taskmanager.service;
 
 import com.example.taskmanager.model.Task;
 import com.example.taskmanager.repository.TaskRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,17 +24,20 @@ public class TaskService {
     }
 
     // Find a single task by ID, throw if not found
+    @Cacheable(value = "tasks", key = "#id")
     public Task getTaskById(Long id) {
         return taskRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
     }
 
     // Save a new task to the database
+    @CacheEvict(value = "tasks", allEntries = true)
     public Task createTask(Task task) {
         return taskRepository.save(task);
     }
 
     // Update an existing task's fields
+    @CacheEvict(value = "tasks", allEntries = true)
     public Task updateTask(Long id, Task taskDetails) {
         Task task = getTaskById(id);
         task.setTitle(taskDetails.getTitle());
@@ -42,6 +47,7 @@ public class TaskService {
     }
 
     // Delete a task by ID
+    @CacheEvict(value = "tasks", allEntries = true)
     public void deleteTask(Long id) {
         Task task = getTaskById(id);
         taskRepository.delete(task);
