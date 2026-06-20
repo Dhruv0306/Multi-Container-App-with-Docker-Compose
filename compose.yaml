@@ -8,8 +8,12 @@ services:
             SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
             SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
             SPRING_DATASOURCE_DRIVER: org.postgresql.Driver
+            SPRING_DATA_REDIS_HOST: redis
+            SPRING_DATA_REDIS_PORT: 6379
         depends_on:
             db:
+                condition: service_healthy
+            redis:
                 condition: service_healthy
         restart: unless-stopped
 
@@ -30,5 +34,18 @@ services:
             retries: 5
         restart: unless-stopped
 
+    redis:
+        image: redis:7-alpine
+        ports:
+            - "6379:6379"
+        healthcheck:
+            test: [ "CMD", "redis-cli", "ping" ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        command: redis-server --appendonly yes --maxmemory 128mb -- maxmemory-policy allkeys-lru
+        restart: unless-stopped
+
 volumes:
     postgres_data:
+    redis_data:
